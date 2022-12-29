@@ -1,40 +1,26 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./components/Sidebar/Sidebar";
+import { useGetData } from "./hooks/useGetData";
 import { CartItemType, Product, Products } from "./services/interfaces";
 
 interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
-  const [data, setData] = useState<Products>();
   const [cart, setCart] = useState<CartItemType[]>([]);
   const [page, setPage] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        const response = await fetch(
-          `https://dummyjson.com/products?skip=${page}&limit=10`
-        );
-        const data = await response.json();
-        if (!data) {
-          throw new Error("Something went wrong!");
-        }
-        setData(data);
-      } catch (err) {
-        console.log(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    getData();
-  }, [page]);
+  const { data, errors, isLoading } = useGetData(page);
 
   return (
     <div className="w-full min-h-screen bg-primary flex flex-col justify-start ">
       <Sidebar cartAmount={cart.length} />
-      {!isLoading ? (
+      {!!errors && (
+        <h1 className="m-auto font-bold text-e3xl font-mono ">
+          [ An error occured! ]
+        </h1>
+      )}
+      {!isLoading && !errors ? (
         <Outlet
           context={{ data: data, cart: [cart, setCart], page: [page, setPage] }}
         />
